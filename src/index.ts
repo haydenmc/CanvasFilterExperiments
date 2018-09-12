@@ -13,34 +13,35 @@ class Index {
     /** The target canvas that image data is painted to after being filtered */
     private targetCanvas: HTMLCanvasElement;
 
-    /** Getter for the 2D context of the source canvas */
-    private get sourceContext2d(): CanvasRenderingContext2D {
-        if (this._sourceContext2d == null) {
-            this._sourceContext2d = this.sourceCanvas.getContext("2d");
-        }
-        return this._sourceContext2d;
-    }
+    /** The 2D context of the source canvas */
+    private sourceContext2d: CanvasRenderingContext2D;
 
-    /** Backing field for sourceContext2d getter */
-    private _sourceContext2d: CanvasRenderingContext2D;
-
-    /** Getter for the 2D context of the target canvas */
-    private get targetContext2d(): CanvasRenderingContext2D {
-        if (this._targetContext2d == null) {
-            this._targetContext2d = this.targetCanvas.getContext("2d");
-        }
-        return this._targetContext2d;
-    }
-
-    /** Backing field for targetContext2d getter */
-    private _targetContext2d: CanvasRenderingContext2D;
+    /** The 2D context of the target canvas */
+    private targetContext2d: CanvasRenderingContext2D;
 
     /** List of image data filters to apply */
     private imageDataFilters: IImageDataFilter[];
     //#endregion Members
 
-
     //#region Private Methods
+    private setUpCanvasScaling(canvas: HTMLCanvasElement): CanvasRenderingContext2D {
+        // // Get the device pixel ratio, falling back to 1.
+        // var dpr = window.devicePixelRatio || 1;
+        // // Get the size of the canvas in CSS pixels.
+        // var rect = canvas.getBoundingClientRect();
+        // // Give the canvas pixel dimensions of their CSS
+        // // size * the device pixel ratio.
+        // canvas.width = rect.width * dpr;
+        // canvas.height = rect.height * dpr;
+        var ctx = canvas.getContext('2d');
+        // // Scale all drawing operations by the dpr, so you
+        // // don't have to worry about the difference.
+        // ctx.scale(dpr, dpr);
+        return ctx;
+    }
+    //#endregion
+
+    //#region Public Methods
     public draw(): void {
         // Get references to canvases / contexts
         let sourceCanvas  = this.sourceCanvas;
@@ -69,18 +70,19 @@ class Index {
         // Rinse, repeat
         requestAnimationFrame(() => this.draw());
     }
-    //#endregion
 
-    //#region Public Methods
     public init(): void {
         this.sourceCanvas = document.querySelector("canvas#source");
         this.targetCanvas = document.querySelector("canvas#target");
+        this.sourceContext2d = this.setUpCanvasScaling(this.sourceCanvas);
+        this.targetContext2d = this.setUpCanvasScaling(this.targetCanvas);
+
         this.imageDataFilters = [
             new ChromaticAberrationImageDataFilter(
-                () => 8, // Magnitude
-                () => <I2dPoint>{ x:  -1, y: 0 }, // R offset
-                () => <I2dPoint>{ x:  0, y: -1 }, // G offset
-                () => <I2dPoint>{ x:  0, y: 0 }  // B offset
+                () => 6, // Magnitude
+                () => <I2dPoint>{ x: -1, y: 0 },  // R offset
+                () => <I2dPoint>{ x:  0, y: 0 },  // G offset
+                () => <I2dPoint>{ x:  1, y: 0 }  // B offset
             )
         ];
     }

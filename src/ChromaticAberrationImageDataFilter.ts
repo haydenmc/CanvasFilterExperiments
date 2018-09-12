@@ -76,6 +76,7 @@ export class ChromaticAberrationImageDataFilter implements IImageDataFilter {
 
         // Pull out image data bits
         let imageDataArray = imageData.data;
+        let imageDataStagingArray = new Uint8ClampedArray(imageDataArray.length);
         let height = imageData.height;
         let width = imageData.width;
 
@@ -101,23 +102,26 @@ export class ChromaticAberrationImageDataFilter implements IImageDataFilter {
                 };
 
                 // Translate each channel
+                let initialPixelAlphaValue = imageDataArray[pixelIndex + this.ALPHA];
                 for (let color = this.RED; color < this.ALPHA; ++color) {
                     // Get current value (alpha and color)
-                    let alphaValue = imageDataArray[pixelIndex + this.ALPHA] * (1 / 3);
+                    let alphaValue = initialPixelAlphaValue * (1 / 3);
                     let colorValue = imageDataArray[pixelIndex + color];
-
-                    // Subtract from source location
-                    //imageDataArray[pixelIndex + this.ALPHA] -= alphaValue;
-                    //imageDataArray[pixelIndex + color] -= colorValue;
 
                     // Add to target location
                     let targetPixel = targetPixels[color];
                     let targetPixelIndex
                         = this.imageDataPixelIndex(width, targetPixel.x, targetPixel.y);
-                    imageDataArray[targetPixelIndex + this.ALPHA] += alphaValue;
-                    imageDataArray[targetPixelIndex + color] += colorValue;
+                    imageDataStagingArray[targetPixelIndex + this.ALPHA] += alphaValue;
+                    imageDataStagingArray[targetPixelIndex + color] += colorValue;
                 }
             }
+        }
+
+        // Copy to existing buffer
+        for (let i = 0; i < imageDataArray.length; ++i)
+        {
+            imageDataArray[i] = imageDataStagingArray[i];
         }
     }
     //#endregion
